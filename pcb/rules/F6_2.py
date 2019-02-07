@@ -3,6 +3,7 @@
 from __future__ import division
 
 from rules.rule import *
+from math import sqrt
 
 class Rule(KLCRule):
     """
@@ -24,19 +25,31 @@ class Rule(KLCRule):
             # Ignore non-smd parts
             return False
 
-        center = module.padMiddlePosition()
+        center_pads = module.padMiddlePosition()
+        center_fab  = module.geometricBoundingBox("F.Fab").center
+
+        if center_pads['x'] != center_fab['x'] or center_pads['y'] != center_fab['y']:
+            self.warning("Footprint centers of pads and F.Fab do not match")
+            self.warningExtra("Footprint center calculated as Pad: ({xp},{yp})mm F.Fab: ({xf}, {yf})mm".format(
+                xp = round(center_pads['x'], 5),
+                yp = round(center_pads['y'], 5),
+                xf = round(center_fab['x'], 5),
+                yf = round(center_fab['y'], 5)))
 
         err = False
 
         THRESHOLD = 0.001
-        x = center['x']
-        y = center['y']
+        # select the xy coordinates that are closest to the center
+        diff_pads = sqrt(center_pads['x']**2 + center_pads['y']**2)
+        diff_fab  = sqrt(center_fab['x']**2 +  center_fab['y']**2)
+        x = (center_pads['x'], center_fab['x'])[diff_pads > diff_fab]
+        y = (center_pads['y'], center_fab['y'])[diff_pads > diff_fab]
 
         if abs(x) > THRESHOLD or abs(y) > THRESHOLD:
             self.error("Footprint anchor is not located at center of footprint")
             self.errorExtra("Footprint center calculated as ({x},{y})mm".format(
-                x = round(center['x'], 5),
-                y = round(center['y'], 5)))
+                x = round(x, 5),
+                y = round(y, 5)))
 
             err = True
 
