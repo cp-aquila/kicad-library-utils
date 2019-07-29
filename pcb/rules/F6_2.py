@@ -16,9 +16,8 @@ class Rule(KLCRule):
         """
         Proceeds the checking of the rule.
         The following variables will be accessible after checking:
-            * pads_bounds
-            * pads_distance
-            * right_anchor
+            * center_pads
+            * center_fab
         """
         module = self.module
         if module.attribute != 'smd':
@@ -38,13 +37,18 @@ class Rule(KLCRule):
 
         err = False
 
-        THRESHOLD = 0.001
-        # select the xy coordinates that are closest to the center
+        # calculate the distance from origin for the pads and fab
         diff_pads = sqrt(center_pads['x']**2 + center_pads['y']**2)
         diff_fab  = sqrt(center_fab['x']**2 +  center_fab['y']**2)
-        x = (center_pads['x'], center_fab['x'])[diff_pads > diff_fab]
-        y = (center_pads['y'], center_fab['y'])[diff_pads > diff_fab]
+        # select the xy coordinates that are closest to the center
+        if diff_pads > diff_fab:
+            x = center_fab['x']
+            y = center_fab['y']
+        else:
+           x = center_pads['x']
+           y = center_pads['y']
 
+        THRESHOLD = 0.001
         if abs(x) > THRESHOLD or abs(y) > THRESHOLD:
             self.error("Footprint anchor is not located at center of footprint")
             self.errorExtra("Footprint center calculated as ({x},{y})mm".format(
@@ -58,6 +62,7 @@ class Rule(KLCRule):
     def fix(self):
         """
         Proceeds the fixing of the rule, if possible.
+	This fix will always use the pads center position.
         """
         module = self.module
         if self.check():
