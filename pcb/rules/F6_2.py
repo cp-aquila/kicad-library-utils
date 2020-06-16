@@ -46,10 +46,10 @@ class Rule(KLCRule):
         THRESHOLD = 0.001
         if abs(x) > THRESHOLD or abs(y) > THRESHOLD:
             self.error("Footprint anchor does not match calculated center of Pads or F.Fab")
-            self.errorExtra("calculated centers for Pads [{xp},{yp}mm]".format(
+            self.errorExtra("calculated center for Pads [{xp},{yp}mm]".format(
                 xp = round(center_pads['x'], 5),
                 yp = round(center_pads['y'], 5)))
-            self.errorExtra("calculated centers for F.Fab [{xf},{yf}mm]".format(
+            self.errorExtra("calculated center for F.Fab [{xf},{yf}mm]".format(
                 xf = round(center_fab['x'], 5),
                 yf = round(center_fab['y'], 5)))
 
