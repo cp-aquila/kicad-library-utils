@@ -18,6 +18,11 @@ class Rule(KLCRule):
         The following variables will be accessible after checking:
             * center_pads
             * center_fab
+
+        This test will generate false positives for parts that have a weird outline, are not symmetrical or do not have 
+        the pick'n'place location in the geometrical center.
+        Most connectors will have at least one of those issues (e.g. a FPC-Connector) and fail this test.
+        For most other components (LEDs, molded packages, ...) this test will yield usable results.
         """
         module = self.module
         if module.attribute != 'smd':
@@ -40,14 +45,13 @@ class Rule(KLCRule):
 
         THRESHOLD = 0.001
         if abs(x) > THRESHOLD or abs(y) > THRESHOLD:
-            self.error("Footprint anchor is not located at center of footprint")
-            self.errorExtra("Footprint center calculated as Pad: ({xp},{yp})mm F.Fab: ({xf}, {yf})mm".format(
+            self.error("Footprint anchor does not match calculated center of Pads or F.Fab")
+            self.errorExtra("calculated centers for Pads [{xp},{yp}mm]".format(
                 xp = round(center_pads['x'], 5),
-                yp = round(center_pads['y'], 5),
+                yp = round(center_pads['y'], 5)))
+            self.errorExtra("calculated centers for F.Fab [{xf},{yf}mm]".format(
                 xf = round(center_fab['x'], 5),
                 yf = round(center_fab['y'], 5)))
-            if center_pads['x'] != center_fab['x'] or center_pads['y'] != center_fab['y']:
-                self.errorExtra("Footprint centers of pads and F.Fab do not match")
 
             err = True
 
@@ -56,7 +60,7 @@ class Rule(KLCRule):
     def fix(self):
         """
         Proceeds the fixing of the rule, if possible.
-	This fix will always use the pads center position.
+        This fix will always use the pads center position.
         """
         module = self.module
         if self.check():
